@@ -178,9 +178,21 @@ and filename relative to the dependency."
   "Run command in comint mode."
   (pop-to-buffer (compile args 'exunit-iex-mode)))
 
+(defvar exunit-default-directory 'project-root
+  "Sets working dir for exunit calls. Can be either 'project-root, 'unmbrella-root or path.")
+
+(defun exunit-default-directory ()
+  (cond
+   ((equal exunit-default-directory 'project-root)
+    (exunit-project-root))
+   ((equal exunit-default-directory 'umbrella-root)
+    (exunit-umbrella-project-root))
+   ((stringp exunit-default-directory) exunit-default-directory)
+   (t (exunit-project-root))))
+
 (defun exunit-compile (args &optional directory)
   "Run mix test with the given ARGS."
-  (let ((default-directory (or directory (exunit-project-root)))
+  (let ((default-directory (or directory (exunit-default-directory)))
         (compilation-environment exunit-environment)
         (args (if current-prefix-arg
                   (list (read-from-minibuffer "Args: " (s-join " " args) nil nil 'exunit-arguments))
@@ -190,7 +202,7 @@ and filename relative to the dependency."
 
 (defun exunit-comint (args &optional directory)
   "Run mix test in iex shell with the given ARGS."
-  (let ((default-directory (or directory (exunit-project-root)))
+  (let ((default-directory (or directory (exunit-default-directory)))
         (compilation-environment exunit-environment))
     (exunit-do-comint
      (s-join " " (append '("iex" "-S" "mix" "test" "--trace") exunit-mix-test-default-options args)))))
